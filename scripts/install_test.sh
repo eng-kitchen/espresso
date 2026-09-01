@@ -63,6 +63,7 @@ assert "background exists" '[[ -f "$ROOT/installer/dmg-background.png" ]]'
 assert "helper icon exists" '[[ -f "$ROOT/installer/brew-helper-icon.png" ]]'
 assert "dmgbuild settings exist" '[[ -f "$ROOT/installer/dmgbuild_settings.py" ]]'
 assert "build-dmg refuses Linux" 'grep -q "needs macOS" "$BUILD_DMG"'
+assert "build-dmg uses a venv for dmgbuild" 'grep -q "python3 -m venv" "$BUILD_DMG"'
 
 if [[ "$(uname -s)" != Darwin ]]; then
   echo "== build-dmg.sh on Linux"

@@ -19,13 +19,18 @@ fi
 [[ -f "$HELPER_SRC" ]] || { echo "Missing helper: $HELPER_SRC" >&2; exit 1; }
 [[ -f "$BG" ]] || { echo "Missing background: $BG" >&2; exit 1; }
 
+# Homebrew Python on GHA is PEP 668-managed, so never pip install --user.
+# A throwaway venv is the reliable way to get dmgbuild on the runner.
 if ! command -v dmgbuild >/dev/null 2>&1; then
-  python3 -m pip install --user 'dmgbuild>=1.6.1'
-  user_bin="$(python3 -c 'import site; print(site.USER_BASE)')/bin"
-  export PATH="${user_bin}:$PATH"
+  venv="${TMPDIR:-/tmp}/espresso-dmgbuild-venv"
+  if [[ ! -x "$venv/bin/dmgbuild" ]]; then
+    python3 -m venv "$venv"
+    "$venv/bin/pip" install -q 'dmgbuild>=1.6.1'
+  fi
+  export PATH="$venv/bin:$PATH"
 fi
 command -v dmgbuild >/dev/null 2>&1 || {
-  echo "dmgbuild is not on PATH. Install with: python3 -m pip install dmgbuild" >&2
+  echo "dmgbuild is not on PATH after venv install." >&2
   exit 1
 }
 

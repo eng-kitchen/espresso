@@ -33,7 +33,6 @@ jobs:
 
       - name: Package café DMG
         run: |
-          python3 -m pip install --user 'dmgbuild>=1.6.1'
           ./installer/build-dmg.sh Espresso.app "$PWD/Espresso.dmg"
           shasum -a 256 Espresso.dmg | tee Espresso.dmg.sha256
 
