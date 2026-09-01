@@ -108,7 +108,8 @@ echo "== landing page"
 PAGE="$ROOT/docs/index.html"
 assert "keeps VERSION placeholder" 'grep -q "{{VERSION}}" "$PAGE"'
 assert "offers curl brew command" 'grep -q "install.sh | bash" "$PAGE"'
-assert "still offers DMG download" 'grep -q "Espresso.dmg" "$PAGE"'
+assert "does not offer a DMG download" '! grep -q "Download Espresso.dmg" "$PAGE"'
+assert "does not document a manual DMG path" '! grep -qi "Café tray" "$PAGE"'
 assert "explains Gatekeeper" 'grep -qi "Gatekeeper" "$PAGE"'
 
 if [[ "$failures" -eq 0 ]]; then

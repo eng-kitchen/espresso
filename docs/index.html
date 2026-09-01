@@ -8,7 +8,6 @@
   <style>
     :root {
       --bg: #0f0a05;
-      --bg-2: #1a1208;
       --cream: #fef3c7;
       --amber: #d97706;
       --amber-hot: #f59e0b;
@@ -89,27 +88,16 @@
       margin-bottom: 2.4rem;
     }
 
-    .orders {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 1.1rem;
-      width: min(720px, 100%);
-      margin-bottom: 1.75rem;
-    }
-
-    @media (min-width: 720px) {
-      .orders { grid-template-columns: 1.15fr 0.85fr; align-items: stretch; }
-    }
-
     .card {
+      width: min(520px, 100%);
       background: linear-gradient(180deg, #1c1209 0%, #140e08 100%);
       border: 1px solid #3a2714;
       border-radius: 16px;
       padding: 1.25rem 1.3rem 1.35rem;
       text-align: left;
+      box-shadow: 0 0 0 1px rgba(217, 119, 6, 0.28), 0 18px 40px rgba(0, 0, 0, 0.35);
+      margin-bottom: 1.1rem;
     }
-
-    .card.primary { box-shadow: 0 0 0 1px rgba(217, 119, 6, 0.28), 0 18px 40px rgba(0, 0, 0, 0.35); }
 
     .badge {
       display: inline-block;
@@ -124,8 +112,6 @@
       margin-bottom: 0.7rem;
     }
 
-    .badge.alt { background: transparent; color: var(--amber); border: 1px solid #7c4a12; }
-
     .card h2 {
       font-size: 1.15rem;
       font-weight: 650;
@@ -139,6 +125,8 @@
       line-height: 1.55;
       margin-bottom: 0.95rem;
     }
+
+    .card p a { color: var(--amber-hot); }
 
     .terminal {
       display: flex;
@@ -175,58 +163,11 @@
     .copy:hover { background: var(--amber-hot); }
     .copy.copied { background: #65a30d; color: #ecfccb; }
 
-    .download {
-      display: inline-block;
-      background: var(--amber);
-      color: var(--ink);
-      text-decoration: none;
-      padding: 0.7rem 1.15rem;
-      border-radius: 10px;
-      font-size: 0.95rem;
-      font-weight: 650;
-      transition: background 0.15s, transform 0.1s;
-    }
-    .download:hover { background: var(--amber-hot); transform: translateY(-1px); }
-    .download.ghost {
-      background: transparent;
-      color: var(--amber);
-      border: 1px solid #7c4a12;
-      margin-left: 0.45rem;
-    }
-    .download.ghost:hover { background: #2a1a0c; }
-
     .version {
       font-size: 0.78rem;
       color: var(--amber);
       opacity: 0.6;
-      margin-bottom: 1.5rem;
     }
-
-    details {
-      width: min(720px, 100%);
-      background: #140e08;
-      border: 1px solid #2c1d10;
-      border-radius: 14px;
-      padding: 0.85rem 1.1rem;
-      color: var(--gold);
-      font-size: 0.88rem;
-      line-height: 1.6;
-      opacity: 0.9;
-    }
-
-    details summary {
-      cursor: pointer;
-      color: var(--cream);
-      font-weight: 600;
-      list-style: none;
-    }
-    details summary::-webkit-details-marker { display: none; }
-    details summary::before { content: "▸ "; color: var(--amber); }
-    details[open] summary::before { content: "▾ "; }
-    details[open] summary { margin-bottom: 0.55rem; }
-
-    details ol { padding-left: 1.2rem; }
-    details a { color: var(--amber-hot); }
 
     footer {
       position: fixed;
@@ -252,55 +193,22 @@
     Toggle on demand or set a timer up to 5 hours. No dock icon. No Apple tax.
   </p>
 
-  <div class="orders">
-    <section class="card primary">
-      <div class="badge">Recommended</div>
-      <h2>Brew it in Terminal</h2>
-      <p>
-        One line installs to <code>~/Applications</code>, ad-hoc signs the app,
-        and clears Gatekeeper. This is how you skip “unidentified developer”
-        without a paid Apple ID.
-      </p>
-      <div class="terminal">
-        <code id="brew-cmd">curl -fsSL https://eng-kitchen.github.io/espresso/install.sh | bash</code>
-        <button class="copy" type="button" id="copy-brew">Copy</button>
-      </div>
-    </section>
-
-    <section class="card">
-      <div class="badge alt">Takeaway</div>
-      <h2>Café tray (DMG)</h2>
-      <p>
-        Drag Espresso onto Applications, then double-click
-        <strong>Brew Espresso</strong> on the disk image. That helper signs
-        the copy and wipes the quarantine flag.
-      </p>
-      <a class="download" href="https://github.com/eng-kitchen/espresso/releases/latest/download/Espresso.dmg">
-        Download Espresso.dmg
-      </a>
-    </section>
-  </div>
+  <section class="card">
+    <div class="badge">Install</div>
+    <h2>Brew it in Terminal</h2>
+    <p>
+      One line installs to <code>~/Applications</code>, ad-hoc signs the app,
+      and clears Gatekeeper. This is how you skip “unidentified developer”
+      without a paid Apple ID.
+      <a href="https://github.com/eng-kitchen/espresso/blob/main/scripts/install.sh">Read the recipe</a>.
+    </p>
+    <div class="terminal">
+      <code id="brew-cmd">curl -fsSL https://eng-kitchen.github.io/espresso/install.sh | bash</code>
+      <button class="copy" type="button" id="copy-brew">Copy</button>
+    </div>
+  </section>
 
   <p class="version">v{{VERSION}} · macOS 13+</p>
-
-  <details>
-    <summary>macOS blocked it anyway?</summary>
-    <p>
-      Espresso is ad-hoc signed on purpose — no $99/year Developer ID, no notarization.
-      If Finder still complains after a browser download:
-    </p>
-    <ol>
-      <li>Prefer the Terminal brew above. It never leaves the quarantine bit set.</li>
-      <li>If you already dragged the app: keep the disk image open and double-click <strong>Brew Espresso</strong>. If macOS blocks the helper too, right-click it → Open.</li>
-      <li>Last resort, in Terminal:
-        <code style="display:block;margin-top:0.35rem;color:#f59e0b">xattr -cr ~/Applications/Espresso.app /Applications/Espresso.app 2>/dev/null; open ~/Applications/Espresso.app</code>
-      </li>
-    </ol>
-    <p style="margin-top:0.6rem">
-      Read the recipe first:
-      <a href="https://github.com/eng-kitchen/espresso/blob/main/scripts/install.sh">install.sh on GitHub</a>.
-    </p>
-  </details>
 
   <footer><a href="https://github.com/eng-kitchen/espresso">View on GitHub</a></footer>
   <script>

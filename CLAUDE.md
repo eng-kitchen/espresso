@@ -47,15 +47,14 @@ make test-installer
 ## End-user install (unsigned, no Apple Developer ID)
 
 Espresso is **ad-hoc signed**, not notarized. Browser-downloaded apps get a
-quarantine flag and Gatekeeper blocks them. The supported ways around that:
+quarantine flag and Gatekeeper blocks them. The supported install is brew
+from Terminal — it never leaves quarantine set:
 
-1. **Brew from Terminal** (recommended) — never leaves quarantine set:
-   ```bash
-   curl -fsSL https://eng-kitchen.github.io/espresso/install.sh | bash
-   ```
-2. **Café DMG** — drag Espresso to Applications, then double-click **Brew Espresso**
-   on the disk image (right-click → Open if macOS blocks the helper too).
-3. **From this repo**: `make install`
+```bash
+curl -fsSL https://eng-kitchen.github.io/espresso/install.sh | bash
+```
+
+From this repo during development: `make install`.
 
 Do not manually edit a version string into `docs/index.html`. The
 `{{VERSION}}` placeholder is replaced at deploy time.
