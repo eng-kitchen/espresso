@@ -20,6 +20,9 @@ jobs:
         with:
           go-version-file: go.mod
 
+      - name: Test installer scripts
+        run: make test-installer
+
       - name: Build app
         run: make build
 
@@ -28,21 +31,19 @@ jobs:
           codesign --sign - --force --deep Espresso.app
           xattr -cr Espresso.app
 
-      - name: Package DMG
+      - name: Package café DMG
         run: |
-          hdiutil create \
-            -volname "Espresso" \
-            -srcfolder Espresso.app \
-            -ov \
-            -format UDZO \
-            Espresso.dmg
+          python3 -m pip install --user 'dmgbuild>=1.6.1'
+          ./installer/build-dmg.sh Espresso.app "$PWD/Espresso.dmg"
+          shasum -a 256 Espresso.dmg | tee Espresso.dmg.sha256
 
       - name: Create GitHub Release
         run: |
           gh release create "$GITHUB_REF_NAME" \
             Espresso.dmg \
+            Espresso.dmg.sha256 \
             --title "Espresso $GITHUB_REF_NAME" \
-            --generate-notes
+            --notes-file installer/release-notes.md
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -51,6 +52,8 @@ jobs:
           VERSION="${GITHUB_REF_NAME#v}"
           mkdir -p _site
           sed "s/{{VERSION}}/$VERSION/g" docs/index.html > _site/index.html
+          cp scripts/install.sh _site/install.sh
+          chmod 644 _site/install.sh
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

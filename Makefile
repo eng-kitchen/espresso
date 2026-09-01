@@ -2,7 +2,7 @@ BINARY  = espresso
 BUNDLE  = Espresso.app
 INSTALL = $(HOME)/Applications
 
-.PHONY: build clean install uninstall smoke
+.PHONY: build clean install uninstall smoke dmg test-installer
 
 build:
 	go build -o $(BINARY) .
@@ -49,5 +49,16 @@ smoke: install
 		|| echo "PASS: process stopped cleanly"
 	@echo "--- smoke test passed ---"
 
+# Coffee-themed DMG with Applications drop link + Brew Espresso helper.
+# macOS only (hdiutil / dmgbuild).
+dmg: build
+	codesign --sign - --force --deep $(BUNDLE)
+	xattr -cr $(BUNDLE) 2>/dev/null || true
+	./installer/build-dmg.sh $(BUNDLE) $(CURDIR)/Espresso.dmg
+
+# Installer script tests (Linux-safe). App unit tests: go test ./... -v
+test-installer:
+	bash scripts/install_test.sh
+
 clean:
-	rm -rf $(BINARY) $(BUNDLE) AppIcon.iconset
+	rm -rf $(BINARY) $(BUNDLE) AppIcon.iconset Espresso.dmg
