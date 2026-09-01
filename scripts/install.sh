@@ -195,11 +195,28 @@ espresso_trust() {
   fi
 }
 
+# Not local: the EXIT trap must still see these after espresso_install returns.
+# Bash 3.2 (macOS /bin/bash) expands trap strings after locals are torn down,
+# which produced `mount: unbound variable` on a successful brew.
+espresso_tmp=""
+espresso_mount=""
+
+espresso_cleanup() {
+  if [[ -n "${espresso_mount:-}" ]]; then
+    hdiutil detach -quiet "$espresso_mount" 2>/dev/null || true
+    espresso_mount=""
+  fi
+  if [[ -n "${espresso_tmp:-}" ]]; then
+    rm -rf "$espresso_tmp"
+    espresso_tmp=""
+  fi
+}
+
 espresso_install() {
   set -euo pipefail
   espresso_is_macos || espresso_die "Espresso is a macOS app. This installer only runs on a Mac."
 
-  local tag url tmp dmg mount="" dest
+  local tag url dmg dest
   tag="$espresso_version"
   if [[ -z "$tag" && -z "$espresso_dmg_url" ]]; then
     tag="$(espresso_latest_tag || true)"
@@ -216,19 +233,19 @@ espresso_install() {
   printf '\n'
 
   espresso_step "①" "Grinding beans (downloading)…"
-  tmp="$(mktemp -d "${TMPDIR:-/tmp}/espresso-brew.XXXXXX")"
-  dmg="${tmp}/Espresso.dmg"
-  trap 'hdiutil detach -quiet "$mount" 2>/dev/null || true; rm -rf "$tmp"' EXIT
+  espresso_tmp="$(mktemp -d "${TMPDIR:-/tmp}/espresso-brew.XXXXXX")"
+  dmg="${espresso_tmp}/Espresso.dmg"
+  trap espresso_cleanup EXIT
 
-  curl -fL --retry 3 --retry-delay 1 -o "$dmg" "$url" \
+  curl -fsSL --retry 3 --retry-delay 1 -o "$dmg" "$url" \
     || espresso_die "Could not download ${url}"
 
   [[ -s "$dmg" ]] || espresso_die "Download was empty. Check ${url}"
   espresso_ok "Beans in the hopper"
 
   espresso_step "②" "Tamping the puck (mounting)…"
-  mount="$(hdiutil attach -nobrowse -readonly "$dmg" | sed -n 's/.*\(\/Volumes\/.*\)$/\1/p' | tail -n1)"
-  [[ -n "$mount" && -d "$mount/Espresso.app" ]] \
+  espresso_mount="$(hdiutil attach -nobrowse -readonly "$dmg" | sed -n 's/.*\(\/Volumes\/.*\)$/\1/p' | tail -n1)"
+  [[ -n "$espresso_mount" && -d "$espresso_mount/Espresso.app" ]] \
     || espresso_die "The DMG did not contain Espresso.app"
   espresso_ok "Puck tamped"
 
@@ -236,7 +253,7 @@ espresso_install() {
   espresso_quit_running
   mkdir -p "$espresso_install_dir"
   rm -rf "$dest"
-  ditto "$mount/Espresso.app" "$dest" \
+  ditto "$espresso_mount/Espresso.app" "$dest" \
     || espresso_die "Could not copy Espresso.app to ${dest}"
   espresso_ok "Shot pulled"
 
@@ -244,8 +261,8 @@ espresso_install() {
   espresso_trust "$dest"
   espresso_ok "No quarantine. No lecture."
 
-  hdiutil detach -quiet "$mount" 2>/dev/null || true
-  mount=""
+  espresso_cleanup
+  trap - EXIT
 
   if [[ "$espresso_launch" == "1" ]]; then
     espresso_step "⑤" "First sip (launching)…"

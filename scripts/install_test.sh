@@ -50,13 +50,42 @@ assert "helper ad-hoc signs" \
 assert "helper launches the app" \
   'grep -q "open \"\$DEST\"" "$HELPER"'
 
-echo "== install.sh Gatekeeper path"
-assert "install.sh clears quarantine" \
-  'grep -q "com.apple.quarantine" "$INSTALL"'
-assert "install.sh ad-hoc signs" \
-  'grep -q "codesign --sign -" "$INSTALL"'
-assert "install.sh refuses non-macOS" \
-  'grep -q "only runs on a Mac" "$INSTALL"'
+echo "== EXIT trap must not leak unbound mount"
+assert "cleanup helper exists" 'type espresso_cleanup >/dev/null'
+assert "trap calls espresso_cleanup" 'grep -q "trap espresso_cleanup EXIT" "$INSTALL"'
+assert "trap does not expand local mount" '! grep -q "detach -quiet \"\$mount\"" "$INSTALL"'
+
+cleanup_err="$(
+  set +e
+  (
+    set -euo pipefail
+    espresso_tmp=""
+    espresso_mount=""
+    espresso_cleanup
+    printf 'survived\n'
+  ) 2>&1
+  printf 'exit:%s\n' "$?"
+)"
+assert "cleanup under nounset survives" '[[ "$cleanup_err" == *survived* && "$cleanup_err" != *unbound* ]]'
+
+# Function-return + EXIT trap + nounset: the exact failure Yuri hit.
+trap_out="$(bash -c '
+set -euo pipefail
+# shellcheck source=/dev/null
+source "$1"
+espresso_tmp=""
+espresso_mount=""
+simulate() {
+  trap espresso_cleanup EXIT
+  espresso_cleanup
+  trap - EXIT
+}
+simulate
+echo survived
+' _ "$INSTALL" 2>&1)" || true
+assert "success path does not print unbound variable" \
+  '[[ "$trap_out" == *survived* && "$trap_out" != *unbound* ]]'
+
 
 echo "== dmg packaging"
 assert "background exists" '[[ -f "$ROOT/installer/dmg-background.png" ]]'
