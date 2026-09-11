@@ -1,0 +1,4 @@
+{
+  "name": "Espresso",
+  "install": "go mod download"
+}
